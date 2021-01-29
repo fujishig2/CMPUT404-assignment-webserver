@@ -31,8 +31,60 @@ class MyWebServer(socketserver.BaseRequestHandler):
     
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        msg = self.data.decode("utf-8").split(' ')
+        if (msg[0] == 'GET'):
+            if (msg[1] == '/deep/' or msg[1] == '/hardcode/deep/' or msg[1] == '/hardcode/'):
+                html_file = open('./www' + msg[1] + 'index.html', 'r')
+                css = open('./www' + msg[1] + 'deep.css', 'r')
+                self.request.sendall(str.encode("HTTP/1.1 200 OK\n", 'utf-8'))
+                self.request.sendall(str.encode("Content-Type: text/html\n", 'utf-8'))
+                self.request.send(str.encode('\r\n'))
+                self.request.sendall(str.encode(html_file.read(), 'utf-8'))
+                self.request.sendall(str.encode("<style>\n", 'utf-8'))
+                self.request.sendall(str.encode(css.read(), 'utf-8'))
+                self.request.sendall(str.encode("</style>\n", 'utf-8'))
+            elif(msg[1] == '/' or msg[1] == '/index.html'): 
+                html_file = open('./www/index.html', 'r')
+                css = open('./www/base.css', 'r')
+                self.request.sendall(str.encode("HTTP/1.1 200 OK\n", 'utf-8'))
+                self.request.sendall(str.encode("Content-Type: text/html\n", 'utf-8'))
+                self.request.send(str.encode('\r\n'))
+                self.request.sendall(str.encode(html_file.read(), 'utf-8'))
+                self.request.sendall(str.encode("<style>\n", 'utf-8'))
+                self.request.sendall(str.encode(css.read(), 'utf-8'))
+                self.request.sendall(str.encode("</style>\n", 'utf-8'))
+            elif(msg[1] == '/deep/index.html' or msg[1] == '/hardcode/index.html' or msg[1] == '/hardcode/deep/index.html'):
+                html_file = open('./www' + msg[1], 'r')
+                css = open('./www' + msg[1][:len(msg[1])-10] + 'deep.css', 'r')
+                self.request.sendall(str.encode("HTTP/1.1 200 OK\n", 'utf-8'))
+                self.request.sendall(str.encode("Content-Type: text/html\n", 'utf-8'))
+                self.request.send(str.encode('\r\n'))
+                self.request.sendall(str.encode(html_file.read(), 'utf-8'))
+                self.request.sendall(str.encode("<style>\n", 'utf-8'))
+                self.request.sendall(str.encode(css.read(), 'utf-8'))
+                self.request.sendall(str.encode("</style>\n", 'utf-8'))
+            elif(msg[1] == '/deep' or msg[1] == '/hardcode' or msg[1] == '/hardcode/deep'):
+                self.request.sendall(str.encode("HTTP/1.1 301 Moved Permanently\n", 'utf-8'))
+                self.request.sendall(str.encode("Content-Type: text/html\n", 'utf-8'))
+                self.request.send(str.encode('\r\n'))
+                self.request.sendall(str.encode('<html><head></head><body><h1>301 Moved Permanently</h1><p>Location: http://localhost:8080' + msg[1] + '/</p></body></html>', 'utf-8'))
+            elif(msg[1] == '/base.css' or msg[1] == '/deep/deep.css' or msg[1] == '/hardcode/deep.css' or msg[1] == '/hardcode/deep/deep.css'):
+                css = open('./www' + msg[1], 'r')
+                self.request.sendall(str.encode("HTTP/1.1 200 OK\n", 'utf-8'))
+                self.request.sendall(str.encode("Content-Type: text/css\n", 'utf-8'))
+                self.request.send(str.encode('\r\n'))
+                self.request.sendall(str.encode(css.read(), 'utf-8'))
+            else:
+                self.request.sendall(str.encode("HTTP/1.1 404 Not Found\n", 'utf-8'))
+                self.request.sendall(str.encode("Content-Type: text/html\n", 'utf-8'))
+                self.request.send(str.encode('\r\n'))
+                self.request.sendall(str.encode('<html><head></head><body><h1>404 Not Found</h1></body></html>', 'utf-8'))
+        else:
+            self.request.sendall(str.encode("HTTP/1.1 405 Method Not Allowed\n", 'utf-8'))
+            self.request.sendall(str.encode("Content-Type: text/html\n", 'utf-8'))
+            self.request.send(str.encode('\r\n'))
+            self.request.sendall(str.encode('<html><head></head><body><h1>405 Method Not Allowed</h1></body></html>', 'utf-8'))
+        self.request.close()
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
